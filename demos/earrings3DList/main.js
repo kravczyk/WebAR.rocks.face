@@ -1,7 +1,11 @@
 const PI = Math.PI;
 const _settings = {
-  // 3D model:
-  GLTFModelURL: 'assets/earringsSimple.glb',
+  // 3d model list:
+  GLTFModelURLList: [
+    'assets/earringsSimple.glb',
+    'assets/earringsSimple1.glb',
+    'assets/earringsSimple2.glb'
+  ],
 
   // lighting:
   envmapURL: 'assets/venice_sunset_512.hdr',
@@ -37,6 +41,11 @@ const _canvases = {
 
 let _three = null;
 
+function change_item(index){
+  if (_settings.GLTFModelURLList && _settings.GLTFModelURLList[index]){
+    load_GLTF(_settings.GLTFModelURLList[index], true, true);
+  }
+}
 
 function start(){
   
@@ -68,8 +77,8 @@ function start(){
 
     set_lighting();
 
-    if (_settings.GLTFModelURL){
-      load_GLTF(_settings.GLTFModelURL, true, true);
+    if (_settings.GLTFModelURLList && _settings.GLTFModelURLList[0]){
+      load_GLTF(_settings.GLTFModelURLList[0], true, true);
     }
 
     set_occluders();
@@ -139,6 +148,14 @@ function set_lighting(){
 
 
 function load_GLTF(modelURL, isRight, isLeft){
+  if (_three.earringLeft) {
+    _three.earringRight.clear();
+  }
+
+  if (_three.earringRight) {
+    _three.earringRight.clear();
+  }
+
   new THREE.GLTFLoader().load(modelURL, function(gltf){
     const model = gltf.scene;
     model.scale.multiplyScalar(100); // because the model is exported in meters. convert it to cm

@@ -49,6 +49,7 @@
         margin: 0;
         overflow: hidden;
       }
+
       #WebARRocksFaceCanvas, #threeCanvas {
         position: fixed;
         width: 100vw;
@@ -57,12 +58,44 @@
         /* mirror the canvas: */
         transform: rotateY(180deg);
       }
+
       #WebARRocksFaceCanvas {
         z-index: 0;
       }
+
       #threeCanvas {
         z-index: 1;
         /*background-color: rgba(255, 0, 0, 0.5);*/
+      }
+
+      #itemList {
+        z-index: 20;
+        position: absolute;
+        max-width: 100vw;
+        bottom: 0px;
+      }
+
+      .item {
+        cursor: pointer;
+        border: 6px solid transparent;
+        min-width: 128px;
+        min-height: 128px;
+        width: auto !important;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-color: white;
+      }
+
+      .item1 {
+        background-color: red;
+      }
+
+      .item2 {
+        background-color: green;
+      }
+      
+      .item3 {
+        background-color: blue;
       }
     </style>
   </head>
@@ -72,6 +105,12 @@
 
     <!-- canvas where the video will be displayed: -->
     <canvas width="600" height="600" id='WebARRocksFaceCanvas'></canvas>
+
+    <div id="itemList">
+      <div class="item item1" onclick="change_item(0)"></div>
+      <div class="item item2" onclick="change_item(1)"></div>
+      <div class="item item3" onclick="change_item(2)"></div>
+    </div>
   </body>
 </html>
  
