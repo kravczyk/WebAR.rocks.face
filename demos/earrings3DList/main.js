@@ -2,9 +2,24 @@ const PI = Math.PI;
 const _settings = {
   // 3d model list:
   GLTFModelURLList: [
-    'assets/earringsSimple.glb',
-    'assets/earringsSimple1.glb',
-    'assets/earringsSimple2.glb'
+    {
+      model: 'assets/0/O.obj',
+      albedo: 'assets/0/A.png',
+      metallic: 'assets/0/M.png',
+      normal: 'assets/0/N.jpg'
+    },
+    {
+      model: 'assets/1/O.obj',
+      albedo: 'assets/1/A.png',
+      metallic: 'assets/1/M.png',
+      normal: 'assets/1/N.jpg'
+    },
+    {
+      model: 'assets/2/O.obj',
+      albedo: 'assets/2/A.png',
+      metallic: 'assets/2/M.png',
+      normal: 'assets/2/N.jpg'
+    },
   ],
 
   // lighting:
@@ -43,7 +58,8 @@ let _three = null;
 
 function change_item(index){
   if (_settings.GLTFModelURLList && _settings.GLTFModelURLList[index]){
-    load_GLTF(_settings.GLTFModelURLList[index], true, true);
+    load_OBJ(_settings.GLTFModelURLList[index], true, true);
+    set_occluders();
   }
 }
 
@@ -78,10 +94,9 @@ function start(){
     set_lighting();
 
     if (_settings.GLTFModelURLList && _settings.GLTFModelURLList[0]){
-      load_GLTF(_settings.GLTFModelURLList[0], true, true);
+      load_OBJ(_settings.GLTFModelURLList[0], true, true);
+      set_occluders();
     }
-
-    set_occluders();
 
     if (check_isAppleCrap()){
       WebARRocksFaceEarrings3DHelper.resize(_canvases.three.width, _canvases.three.height - 0.001);
@@ -146,25 +161,80 @@ function set_lighting(){
   }
 }
 
-
-function load_GLTF(modelURL, isRight, isLeft){
+function load_OBJ(modelURL, isRight, isLeft){
   if (_three.earringLeft) {
-    _three.earringRight.clear();
+    _three.earringLeft.clear();
   }
 
   if (_three.earringRight) {
     _three.earringRight.clear();
   }
 
-  new THREE.GLTFLoader().load(modelURL, function(gltf){
-    const model = gltf.scene;
-    model.scale.multiplyScalar(100); // because the model is exported in meters. convert it to cm
-    set_shinyMetal(model);
-    _three.earringRight.add(model);
-    _three.earringLeft.add(model.clone()); 
+  new THREE.OBJLoader().load(modelURL.model, function(obj){
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.load(modelURL.albedo, function(albedo){
+      textureLoader.load(modelURL.metallic, function(metallic){
+        textureLoader.load(modelURL.normal, function(normal){
+          const standardMaterial = new THREE.MeshStandardMaterial({
+            color: 0xdddddd,
+            map: albedo,
+            // envMap: env,
+            //metalnessMap: metallic,
+            metalness: 0.8,
+            normalMap: normal,
+            roughness: 0.3,
+            side: THREE.DoubleSide
+          });
+        
+          const transparentMaterial = new THREE.MeshPhysicalMaterial({
+            map: albedo,
+            // envMap: env,
+            metalnessMap: metallic,
+            metalness: 0.8,
+            normalMap: normal,
+            transparent: true,
+            roughness: 0.3,
+            side: THREE.DoubleSide
+          });
+        
+          const glassMaterial = new THREE.MeshPhysicalMaterial({
+            map: albedo,
+            metalness: 0.3,
+            metalnessMap: metallic,
+            ior: 2.3,
+            // envMap: env,
+            envMapIntensity: 1,
+            specularIntensity: 1,
+            opacity: 0.7,
+            side: THREE.DoubleSide,
+            transparent: true,
+            transmission: 0.7,
+            roughness: 1
+          });
+
+          obj.traverse((child) => {
+            if (child.isMesh) {
+              if (child.material.name.startsWith('Glass')) {
+                child.material = glassMaterial;
+                child.renderOrder = 2;
+              } else if (child.material.name.startsWith('Standard')) {
+                child.material = standardMaterial;
+                child.renderOrder = 1;
+              } else {
+                child.material = transparentMaterial;
+                child.renderOrder = 1;
+              }
+            }
+          });
+
+          set_shinyMetal(obj);
+          _three.earringRight.add(obj);
+          _three.earringLeft.add(obj.clone()); 
+        });
+      });
+    });
   });
 }
-
 
 function set_shinyMetal(model){
   model.traverse(function(threeStuff){
